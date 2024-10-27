@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"os"
 	"time"
 
@@ -41,17 +40,11 @@ func init() {
 	}
 }
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Error().Err(err).Msg("error loading .env file")
-
-	}
-
-	dbConnString := os.Getenv("SECRET_XATA_PG_ENDPOINT")
-	log.Print(dbConnString)
-}
-
 func main() {
 	db, err := connectDB()
+	if err != nil {
+		log.Fatal().Err(err).Msg("error connecting to database")
+	}
 
+	defer db.Close()
 }
