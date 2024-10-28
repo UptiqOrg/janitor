@@ -1,7 +1,7 @@
 package main
 
 import (
-	"database/sql"
+	"janitor/db"
 	"os"
 	"time"
 
@@ -25,15 +25,6 @@ func loadEnv() error {
 	return nil
 }
 
-func connectDB() (*sql.DB, error) {
-	log.Print("Connecting to database")
-	db, err := sql.Open("postgres", os.Getenv("SECRET_XATA_PG_ENDPOINT"))
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-
 func init() {
 	if err := loadEnv(); err != nil {
 		log.Fatal().Err(err).Msg("error loading environment variables")
@@ -41,7 +32,7 @@ func init() {
 }
 
 func main() {
-	db, err := connectDB()
+	db, err := db.ConnectDB(os.Getenv("SECRET_XATA_PG_ENDPOINT"))
 	if err != nil {
 		log.Fatal().Err(err).Msg("error connecting to database")
 	}
