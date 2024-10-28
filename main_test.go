@@ -17,7 +17,9 @@ func TestMain(t *testing.T) {
 		return
 	}
 
-	db.ConnectDB(dbConnString)
+	if _, err := db.ConnectDB(dbConnString); err != nil {
+		t.Fatalf("failed to connect to database: %s", err)
+	}
 
 	g.Describe("getExpiredUptimeChecks", func() {
 		g.It("should return a list of expired uptime checks", func() {
