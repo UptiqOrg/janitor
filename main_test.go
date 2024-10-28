@@ -25,5 +25,5 @@ func TestMain(t *testing.T) {
 		})
 	})
 
-	tests.Teardown(&postgresC)
+	defer tests.Teardown(&postgresC)
 }
