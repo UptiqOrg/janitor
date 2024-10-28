@@ -10,11 +10,6 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-type TestDBContainer struct {
-	Id         string
-	ConnString string
-}
-
 func Setup(t *testing.T) (testcontainers.Container, string, error) {
 	container, err := SetupPostgresContainer(t)
 	if err != nil {
