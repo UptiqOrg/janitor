@@ -11,13 +11,12 @@ import (
 func TestMain(t *testing.T) {
 	g := Goblin(t)
 
-	postgresC, err := tests.Setup(t)
+	postgresC, dbConnString, err := tests.Setup(t)
 	if err != nil {
 		t.Fatalf("failed to setup postgres container: %s", err)
 		return
 	}
 
-	dbConnString, err := tests.GetConnString(t, postgresC)
 	db.ConnectDB(dbConnString)
 
 	g.Describe("getExpiredUptimeChecks", func() {

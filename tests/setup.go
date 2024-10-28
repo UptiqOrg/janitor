@@ -15,8 +15,19 @@ type TestDBContainer struct {
 	ConnString string
 }
 
-func Setup(t *testing.T) (testcontainers.Container, error) {
-	return SetupPostgresContainer(t)
+func Setup(t *testing.T) (testcontainers.Container, string, error) {
+	container, err := SetupPostgresContainer(t)
+	if err != nil {
+		return nil, "", err
+	}
+
+	connString, err := GetConnString(t, container)
+	if err != nil {
+		container.Terminate(context.Background())
+		return nil, "", err
+	}
+
+	return container, connString, nil
 }
 
 func GetConnString(t *testing.T, postgresC testcontainers.Container) (string, error) {
