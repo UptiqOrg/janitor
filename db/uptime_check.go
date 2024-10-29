@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"reflect"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,7 +23,7 @@ func GetExpiredUptimeChecks(db *sql.DB) ([]UptimeCheck, error) {
 	log.Print("Getting expired uptime checks")
 	sevenDaysAgo := time.Now().AddDate(0, 0, -7)
 	query := `
-		SELECT id, created_at
+		SELECT *
 		FROM uptime_checks
 		WHERE created_at <= $1
 		ORDER BY created_at DESC
@@ -36,12 +37,12 @@ func GetExpiredUptimeChecks(db *sql.DB) ([]UptimeCheck, error) {
 
 	for rows.Next() {
 		var check UptimeCheck
-		err := rows.Scan(&check.ID, &check.CreatedAt)
-		if err != nil {
+		reflect.ValueOf(&check).Elem()
+		if err := rows.Scan(&check.ID, &check.WebsiteID, &check.Status, &check.StatusCode, &check.ResponseTime, &check.CreatedAt); err != nil {
 			log.Error().Err(err).Msg("Error scanning row")
 			continue
 		}
-
+		log.Print(check)
 		expiredUptimeChecks = append(expiredUptimeChecks, check)
 	}
 	if err = rows.Err(); err != nil {

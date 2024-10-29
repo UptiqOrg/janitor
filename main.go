@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error getting expired uptime checks")
 	}
-	log.Printf("Expired uptime checks: %v", expiredUptimeChecks)
+	log.Printf("Expired uptime checks: %v", len(expiredUptimeChecks))
 
 	defer dbConn.Close()
 }
