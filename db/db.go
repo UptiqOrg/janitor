@@ -8,10 +8,15 @@ import (
 )
 
 func ConnectDB(connString string) (*sql.DB, error) {
-	log.Print("Connecting to database")
 	db, err := sql.Open("postgres", connString)
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Error pinging database %s", err)
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return db, nil
 }
