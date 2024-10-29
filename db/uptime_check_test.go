@@ -90,6 +90,32 @@ func TestGetExpiredUptimeChecks(t *testing.T) {
 				log.Fatalf("Error running test GetExpiredUptimeChecks: %s", err)
 			}
 			g.Assert(len(expiredUptimeChecks)).Equal(1)
+			g.Assert(time.Since(expiredUptimeChecks[0].CreatedAt) > 7*24*time.Hour).IsTrue()
+		})
+
+		g.It("Should not return error because all inputs are valid", func() {
+			_, err := GetExpiredUptimeChecks(testDb)
+			if err != nil {
+				log.Fatalf("Error running test GetExpiredUptimeChecks: %s", err)
+			}
+			g.Assert(err).IsNil("should not return an error")
+		})
+
+		g.It("Should not return error because all inputs are valid", func() {
+			_, err := GetExpiredUptimeChecks(testDb)
+			if err != nil {
+				log.Fatalf("Error running test GetExpiredUptimeChecks: %s", err)
+			}
+			g.Assert(err).IsNil("should not return an error")
+		})
+
+		g.It("Should handle empty results", func() {
+			_, err := testDb.Exec("DELETE FROM uptime_checks")
+			g.Assert(err).IsNil()
+
+			expiredUptimeChecks, err := GetExpiredUptimeChecks(testDb)
+			g.Assert(err).IsNil()
+			g.Assert(len(expiredUptimeChecks)).Equal(0)
 		})
 	})
 
