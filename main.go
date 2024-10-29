@@ -38,7 +38,7 @@ func init() {
 func GetExpiredUptimeChecks(db *sql.DB) ([]UptimeCheck, error) {
 	var expiredUptimeChecks []UptimeCheck
 	log.Print("Getting expired uptime checks")
-	sevenDaysAgo := time.Now().AddDate(0, 0, -7).Format("2006-01-02")
+	sevenDaysAgo := time.Now().AddDate(0, 0, -7)
 	query := `
 		SELECT id, created_at
 		FROM uptime_checks
