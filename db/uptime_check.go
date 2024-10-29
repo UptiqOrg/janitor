@@ -39,7 +39,9 @@ func GetExpiredUptimeChecks(db *sql.DB) ([]UptimeCheck, error) {
 		err := rows.Scan(&check.ID, &check.CreatedAt)
 		if err != nil {
 			log.Error().Err(err).Msg("Error scanning row")
+			continue
 		}
+
 		expiredUptimeChecks = append(expiredUptimeChecks, check)
 	}
 	if err = rows.Err(); err != nil {
