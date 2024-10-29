@@ -28,9 +28,8 @@ func Setup(ctx context.Context) (*postgres.PostgresContainer, string, error) {
 }
 
 func SetupPostgresContainer(ctx context.Context) (*postgres.PostgresContainer, error) {
-
 	pgContainer, err := postgres.RunContainer(ctx,
-		postgres.WithInitScripts(filepath.Join("db", "init.sql")),
+		postgres.WithInitScripts(filepath.Join("init.sql")),
 		testcontainers.WithImage("postgres:15.3"),
 		postgres.WithDatabase("test-db"),
 		postgres.WithUsername("postgres"),
@@ -45,11 +44,4 @@ func SetupPostgresContainer(ctx context.Context) (*postgres.PostgresContainer, e
 	}
 
 	return pgContainer, nil
-
-	// t.Cleanup(func() {
-	// 	if err := pgContainer.Terminate(ctx); err != nil {
-	// 		t.Fatalf("failed to terminate pgContainer: %s", err)
-	// 	}
-	// })
-
 }
