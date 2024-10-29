@@ -2,7 +2,7 @@ package tests
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -15,8 +15,7 @@ import (
 func Setup(ctx context.Context) (*postgres.PostgresContainer, string, error) {
 	container, err := SetupPostgresContainer(ctx)
 	if err != nil {
-		log.Fatalf("Error setting up postgers container: %s", err)
-		return nil, "", err
+		return nil, "", fmt.Errorf("error setting up postgres container: %w", err)
 	}
 
 	connString, err := container.ConnectionString(ctx, "sslmode=disable")
@@ -28,6 +27,7 @@ func Setup(ctx context.Context) (*postgres.PostgresContainer, string, error) {
 }
 
 func SetupPostgresContainer(ctx context.Context) (*postgres.PostgresContainer, error) {
+
 	pgContainer, err := postgres.RunContainer(ctx,
 		postgres.WithInitScripts(filepath.Join("init.sql")),
 		testcontainers.WithImage("postgres:15.3"),
