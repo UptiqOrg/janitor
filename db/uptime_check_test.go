@@ -71,34 +71,26 @@ func TestGetExpiredUptimeChecks(t *testing.T) {
 
 	postgresC, dbConnString, err := tests.Setup(ctx)
 	if err != nil {
-		log.Fatalf("Failed to setup postgres container: %s", err)
+		t.Fatalf("Failed to setup postgres container: %s", err)
 	}
 
 	testDb, err := ConnectDB(dbConnString)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %s", err)
+		t.Fatalf("Error connecting to database: %s", err)
 	}
 
 	if err := InsertDummyUptimeChecks(testDb); err != nil {
-		log.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
+		t.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
 	}
 
 	g.Describe("GetExpiredUptimeChecks", func() {
 		g.It("Should return a list of expired uptime checks", func() {
 			expiredUptimeChecks, err := GetExpiredUptimeChecks(testDb)
 			if err != nil {
-				log.Fatalf("Error running test GetExpiredUptimeChecks: %s", err)
+				g.Fail(err)
 			}
 			g.Assert(len(expiredUptimeChecks)).Equal(1)
 			g.Assert(time.Since(expiredUptimeChecks[0].CreatedAt) > 7*24*time.Hour).IsTrue()
-		})
-
-		g.It("Should not return error because all inputs are valid", func() {
-			_, err := GetExpiredUptimeChecks(testDb)
-			if err != nil {
-				log.Fatalf("Error running test GetExpiredUptimeChecks: %s", err)
-			}
-			g.Assert(err).IsNil("should not return an error")
 		})
 
 		g.It("Should not return error because all inputs are valid", func() {
