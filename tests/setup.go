@@ -2,68 +2,54 @@ package tests
 
 import (
 	"context"
-	"fmt"
-	"testing"
+	"log"
+	"path/filepath"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
+
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func Setup(t *testing.T) (testcontainers.Container, string, error) {
-	container, err := SetupPostgresContainer(t)
+func Setup(ctx context.Context) (*postgres.PostgresContainer, string, error) {
+	container, err := SetupPostgresContainer(ctx)
 	if err != nil {
+		log.Fatalf("Error setting up postgers container: %s", err)
 		return nil, "", err
 	}
 
-	connString, err := GetConnString(t, container)
+	connString, err := container.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
-		container.Terminate(context.Background())
 		return nil, "", err
 	}
 
 	return container, connString, nil
 }
 
-func GetConnString(t *testing.T, postgresC testcontainers.Container) (string, error) {
-	ctx := context.Background()
-	host, err := postgresC.Host(ctx)
+func SetupPostgresContainer(ctx context.Context) (*postgres.PostgresContainer, error) {
+
+	pgContainer, err := postgres.RunContainer(ctx,
+		postgres.WithInitScripts(filepath.Join("db", "init.sql")),
+		testcontainers.WithImage("postgres:15.3"),
+		postgres.WithDatabase("test-db"),
+		postgres.WithUsername("postgres"),
+		postgres.WithPassword("postgres"),
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("database system is ready to accept connections").
+				WithOccurrence(2).WithStartupTimeout(5*time.Second)),
+	)
+
 	if err != nil {
-		t.Fatalf("failed to get container host: %s", err)
-		return "", err
-	}
-
-	port, err := postgresC.MappedPort(ctx, "5432")
-	if err != nil {
-		t.Fatalf("failed to get container port: %s", err)
-		return "", err
-	}
-
-	return fmt.Sprintf("host=%s port=%s user=test password=test dbname=testdb sslmode=disable", host, port.Port()), nil
-}
-
-func SetupPostgresContainer(t *testing.T) (testcontainers.Container, error) {
-	ctx := context.Background()
-
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres:15",
-		ExposedPorts: []string{"5432/tcp"},
-		Env: map[string]string{
-			"POSTGRES_USER":     "test",
-			"POSTGRES_PASSWORD": "test",
-			"POSTGRES_DB":       "testdb",
-		},
-		WaitingFor: wait.ForLog("database system is ready to accept connections").WithStartupTimeout(60 * time.Second),
-	}
-
-	postgresC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		t.Fatalf("failed to start container: %s", err)
 		return nil, err
 	}
 
-	return postgresC, nil
+	return pgContainer, nil
+
+	// t.Cleanup(func() {
+	// 	if err := pgContainer.Terminate(ctx); err != nil {
+	// 		t.Fatalf("failed to terminate pgContainer: %s", err)
+	// 	}
+	// })
+
 }
