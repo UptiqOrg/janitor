@@ -15,7 +15,7 @@ import (
 func Setup(ctx context.Context) (*postgres.PostgresContainer, string, error) {
 	container, err := SetupPostgresContainer(ctx)
 	if err != nil {
-		return nil, "", fmt.Errorf("error setting up postgres container: %w", err)
+		return nil, "", fmt.Errorf("Error setting up postgres container: %w", err)
 	}
 
 	connString, err := container.ConnectionString(ctx, "sslmode=disable")

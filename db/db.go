@@ -2,20 +2,19 @@ package db
 
 import (
 	"database/sql"
-	"log"
+	"fmt"
 
 	_ "github.com/lib/pq"
 )
 
 func ConnectDB(connString string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", connString)
-
-	if err := db.Ping(); err != nil {
-		log.Fatalf("Error pinging database %s", err)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	if err != nil {
-		return nil, err
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("Error pinging database: %w", err)
 	}
 
 	return db, nil
