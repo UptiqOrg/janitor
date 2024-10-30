@@ -18,6 +18,22 @@ type UptimeCheck struct {
 	CreatedAt    time.Time
 }
 
+func DeleteUptimeChecksOneByOne(db *sql.DB, checks []UptimeCheck) (int64, error) {
+	var totalAffected int64
+	for _, check := range checks {
+		result, err := db.Exec(`
+            DELETE FROM uptime_checks
+            WHERE id = $1
+        `, check.ID)
+		if err != nil {
+			return totalAffected, err
+		}
+		affected, _ := result.RowsAffected()
+		totalAffected += affected
+	}
+	return totalAffected, nil
+}
+
 func GetExpiredUptimeChecks(db *sql.DB) ([]UptimeCheck, error) {
 	var expiredUptimeChecks []UptimeCheck
 	log.Print("Getting expired uptime checks")
