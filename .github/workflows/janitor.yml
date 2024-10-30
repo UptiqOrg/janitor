@@ -3,7 +3,6 @@ name: Run hehe
 on:
   workflow_dispatch:
   schedule:
-    # This will run the action every day at 00:00 UTC.
     - cron: "6 9 * * *"
 
 jobs:
