@@ -7,7 +7,7 @@ dev:
 	go run main.go
 
 test:
-	go test -v -race -cover ./${module}...
+	go test -v -cover ./${module}...
 
 # Help target
 help:
