@@ -35,5 +35,11 @@ func main() {
 	}
 	log.Printf("Expired uptime checks: %v", len(expiredUptimeChecks))
 
+	count, err := db.DeleteUptimeChecksBatch(dbConn, expiredUptimeChecks)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error deleting uptime checks")
+	}
+	log.Printf("Deleted %v expired uptime checks", count)
+
 	defer dbConn.Close()
 }
