@@ -21,5 +21,7 @@ jobs:
 
       - name: Run Janitor
         run: go run main.go
+        timeout-minutes: 10
+        continue-on-error: false
         env:
           SECRET_XATA_PG_ENDPOINT: ${{ secrets.SECRET_XATA_PG_ENDPOINT }}
