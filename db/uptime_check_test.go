@@ -117,7 +117,7 @@ func TestUptimeCheck(t *testing.T) {
 		})
 	})
 
-	g.Describe("DeleteUptimeChecksOneByOne", func() {
+	g.Describe("DeleteUptimeChecksBatch", func() {
 		if err := InsertDummyUptimeChecks(testDb); err != nil {
 			t.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
 		}
@@ -146,7 +146,7 @@ func TestUptimeCheck(t *testing.T) {
 				}
 			}
 
-			affectedRows, err := DeleteUptimeChecksOneByOne(testDb, checksToDelete)
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, checksToDelete)
 			if err != nil {
 				g.Fail(err)
 			}
@@ -164,7 +164,7 @@ func TestUptimeCheck(t *testing.T) {
 		})
 
 		g.It("Should handle empty input without error", func() {
-			affectedRows, err := DeleteUptimeChecksOneByOne(testDb, []UptimeCheck{})
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, []UptimeCheck{})
 			g.Assert(err).IsNil()
 			g.Assert(affectedRows).Equal(int64(0))
 		})
@@ -184,12 +184,12 @@ func TestUptimeCheck(t *testing.T) {
 				},
 			}
 
-			_, err := DeleteUptimeChecksOneByOne(testDb, checksToDelete)
+			_, err := DeleteUptimeChecksBatch(testDb, checksToDelete)
 			g.Assert(err).IsNotNil()
 		})
 	})
 
-	g.Describe("GetExpiredUptimeChecks and DeleteUptimeChecksOneByOne", func() {
+	g.Describe("GetExpiredUptimeChecks and DeleteUptimeChecksBatch", func() {
 		if err := InsertDummyUptimeChecks(testDb); err != nil {
 			t.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
 		}
@@ -200,7 +200,7 @@ func TestUptimeCheck(t *testing.T) {
 			}
 			g.Assert(len(expiredUptimeChecks)).Equal(1)
 
-			affectedRows, err := DeleteUptimeChecksOneByOne(testDb, expiredUptimeChecks)
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, expiredUptimeChecks)
 			if err != nil {
 				g.Fail(err)
 			}
@@ -214,7 +214,7 @@ func TestUptimeCheck(t *testing.T) {
 		})
 
 		g.It("Should handle empty input without error", func() {
-			affectedRows, err := DeleteUptimeChecksOneByOne(testDb, []UptimeCheck{})
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, []UptimeCheck{})
 			g.Assert(err).IsNil()
 			g.Assert(affectedRows).Equal(int64(0))
 		})
@@ -228,7 +228,7 @@ func TestUptimeCheck(t *testing.T) {
 				g.Fail(err)
 			}
 
-			_, err = DeleteUptimeChecksOneByOne(testDb, expiredUptimeChecks)
+			_, err = DeleteUptimeChecksBatch(testDb, expiredUptimeChecks)
 			g.Assert(err).IsNotNil()
 		})
 	})
