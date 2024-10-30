@@ -1,4 +1,4 @@
-name: Run hehe
+name: Room service
 
 on:
   workflow_dispatch:
