@@ -38,7 +38,6 @@ func SetupPostgresContainer(ctx context.Context) (*postgres.PostgresContainer, e
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).WithStartupTimeout(5*time.Second)),
 	)
-
 	if err != nil {
 		return nil, err
 	}

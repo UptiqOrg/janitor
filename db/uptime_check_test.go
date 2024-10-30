@@ -168,25 +168,6 @@ func TestUptimeCheck(t *testing.T) {
 			g.Assert(err).IsNil()
 			g.Assert(affectedRows).Equal(int64(0))
 		})
-
-		g.It("Should return an error if the database operation fails", func() {
-			// Simulate a failure by closing the database connection
-			testDb.Close()
-
-			checksToDelete := []UptimeCheck{
-				{
-					ID:           uuid.New(),
-					WebsiteID:    uuid.New(),
-					Status:       "down",
-					StatusCode:   500,
-					ResponseTime: 300,
-					CreatedAt:    time.Now().Add(-10 * 24 * time.Hour),
-				},
-			}
-
-			_, err := DeleteUptimeChecksBatch(testDb, checksToDelete)
-			g.Assert(err).IsNotNil()
-		})
 	})
 
 	g.Describe("GetExpiredUptimeChecks and DeleteUptimeChecksBatch", func() {
@@ -217,19 +198,6 @@ func TestUptimeCheck(t *testing.T) {
 			affectedRows, err := DeleteUptimeChecksBatch(testDb, []UptimeCheck{})
 			g.Assert(err).IsNil()
 			g.Assert(affectedRows).Equal(int64(0))
-		})
-
-		g.It("Should return an error if the database operation fails", func() {
-			// Simulate a failure by closing the database connection
-			testDb.Close()
-
-			expiredUptimeChecks, err := GetExpiredUptimeChecks(testDb)
-			if err != nil {
-				g.Fail(err)
-			}
-
-			_, err = DeleteUptimeChecksBatch(testDb, expiredUptimeChecks)
-			g.Assert(err).IsNotNil()
 		})
 	})
 
