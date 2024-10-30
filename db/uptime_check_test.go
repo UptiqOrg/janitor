@@ -12,8 +12,14 @@ import (
 	"github.com/google/uuid"
 )
 
+var websiteId, err = uuid.Parse("e4505e8c-f83b-42c0-b6ff-dd497899149a")
+
 func InsertDummyUptimeChecks(testDb *sql.DB) error {
-	websiteId, err := uuid.Parse("e4505e8c-f83b-42c0-b6ff-dd497899149a")
+	_, err := testDb.Exec("DELETE FROM uptime_checks")
+	if err != nil {
+		return err
+	}
+
 	if err != nil {
 		log.Fatalf("Unable to parse website ID: %v", err)
 	}
@@ -65,7 +71,7 @@ func InsertDummyUptimeChecks(testDb *sql.DB) error {
 	return nil
 }
 
-func TestGetExpiredUptimeChecks(t *testing.T) {
+func TestUptimeCheck(t *testing.T) {
 	g := Goblin(t)
 	ctx := context.Background()
 
@@ -79,11 +85,11 @@ func TestGetExpiredUptimeChecks(t *testing.T) {
 		t.Fatalf("Error connecting to database: %s", err)
 	}
 
-	if err := InsertDummyUptimeChecks(testDb); err != nil {
-		t.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
-	}
-
 	g.Describe("GetExpiredUptimeChecks", func() {
+		if err := InsertDummyUptimeChecks(testDb); err != nil {
+			t.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
+		}
+
 		g.It("Should return a list of expired uptime checks", func() {
 			expiredUptimeChecks, err := GetExpiredUptimeChecks(testDb)
 			if err != nil {
@@ -108,6 +114,122 @@ func TestGetExpiredUptimeChecks(t *testing.T) {
 			expiredUptimeChecks, err := GetExpiredUptimeChecks(testDb)
 			g.Assert(err).IsNil()
 			g.Assert(len(expiredUptimeChecks)).Equal(0)
+		})
+	})
+
+	g.Describe("DeleteUptimeChecksBatch", func() {
+		if err := InsertDummyUptimeChecks(testDb); err != nil {
+			t.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
+		}
+
+		g.It("Should delete the specified uptime checks", func() {
+			// Static list of uptime checks to delete
+			checksToDelete := []UptimeCheck{
+				{
+					ID:           uuid.New(),
+					WebsiteID:    websiteId,
+					Status:       "down",
+					StatusCode:   500,
+					ResponseTime: 300,
+					CreatedAt:    time.Now().Add(-10 * 24 * time.Hour),
+				},
+			}
+
+			// Insert the static checks into the database
+			for _, check := range checksToDelete {
+				_, err := testDb.Exec(`
+					INSERT INTO uptime_checks (id, website_id, status, status_code, response_time, created_at)
+					VALUES ($1, $2, $3, $4, $5, $6)`,
+					check.ID, check.WebsiteID, check.Status, check.StatusCode, check.ResponseTime, check.CreatedAt)
+				if err != nil {
+					g.Fail(err)
+				}
+			}
+
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, checksToDelete)
+			if err != nil {
+				g.Fail(err)
+			}
+			g.Assert(affectedRows).Equal(int64(len(checksToDelete)))
+
+			// Verify that the checks have been deleted
+			for _, check := range checksToDelete {
+				var count int
+				err := testDb.QueryRow("SELECT COUNT(*) FROM uptime_checks WHERE id = $1", check.ID).Scan(&count)
+				if err != nil {
+					g.Fail(err)
+				}
+				g.Assert(count).Equal(0)
+			}
+		})
+
+		g.It("Should handle empty input without error", func() {
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, []UptimeCheck{})
+			g.Assert(err).IsNil()
+			g.Assert(affectedRows).Equal(int64(0))
+		})
+
+		g.It("Should return an error if the database operation fails", func() {
+			// Simulate a failure by closing the database connection
+			testDb.Close()
+
+			checksToDelete := []UptimeCheck{
+				{
+					ID:           uuid.New(),
+					WebsiteID:    uuid.New(),
+					Status:       "down",
+					StatusCode:   500,
+					ResponseTime: 300,
+					CreatedAt:    time.Now().Add(-10 * 24 * time.Hour),
+				},
+			}
+
+			_, err := DeleteUptimeChecksBatch(testDb, checksToDelete)
+			g.Assert(err).IsNotNil()
+		})
+	})
+
+	g.Describe("GetExpiredUptimeChecks and DeleteUptimeChecksBatch", func() {
+		if err := InsertDummyUptimeChecks(testDb); err != nil {
+			t.Fatalf("Error inserting entries in the uptime_checks table: %s", err)
+		}
+		g.It("Should delete the specified uptime checks", func() {
+			expiredUptimeChecks, err := GetExpiredUptimeChecks(testDb)
+			if err != nil {
+				g.Fail(err)
+			}
+			g.Assert(len(expiredUptimeChecks)).Equal(1)
+
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, expiredUptimeChecks)
+			if err != nil {
+				g.Fail(err)
+			}
+			g.Assert(affectedRows).Equal(int64(len(expiredUptimeChecks)))
+
+			remainingChecks, err := GetExpiredUptimeChecks(testDb)
+			if err != nil {
+				g.Fail(err)
+			}
+			g.Assert(len(remainingChecks)).Equal(0)
+		})
+
+		g.It("Should handle empty input without error", func() {
+			affectedRows, err := DeleteUptimeChecksBatch(testDb, []UptimeCheck{})
+			g.Assert(err).IsNil()
+			g.Assert(affectedRows).Equal(int64(0))
+		})
+
+		g.It("Should return an error if the database operation fails", func() {
+			// Simulate a failure by closing the database connection
+			testDb.Close()
+
+			expiredUptimeChecks, err := GetExpiredUptimeChecks(testDb)
+			if err != nil {
+				g.Fail(err)
+			}
+
+			_, err = DeleteUptimeChecksBatch(testDb, expiredUptimeChecks)
+			g.Assert(err).IsNotNil()
 		})
 	})
 

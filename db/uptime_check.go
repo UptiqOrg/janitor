@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 )
 
@@ -16,6 +17,47 @@ type UptimeCheck struct {
 	StatusCode   int
 	ResponseTime int
 	CreatedAt    time.Time
+}
+
+func DeleteUptimeChecksBatch(db *sql.DB, checks []UptimeCheck) (int64, error) {
+	if len(checks) == 0 {
+		return 0, nil
+	}
+
+	var totalAffected int64
+	batchSize := 20
+
+	for i := 0; i < len(checks); i += batchSize {
+		end := i + batchSize
+		if end > len(checks) {
+			end = len(checks)
+		}
+
+		var ids []interface{}
+		for _, check := range checks[i:end] {
+			ids = append(ids, check.ID)
+		}
+
+		log.Print("Deleting uptime checks with IDs: ", ids)
+
+		query := `
+    DELETE FROM uptime_checks
+    WHERE id = ANY($1)
+   `
+		result, err := db.Exec(query, pq.Array(ids))
+		if err != nil {
+			return totalAffected, err
+		}
+
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return totalAffected, err
+		}
+
+		totalAffected += affected
+	}
+
+	return totalAffected, nil
 }
 
 func GetExpiredUptimeChecks(db *sql.DB) ([]UptimeCheck, error) {
