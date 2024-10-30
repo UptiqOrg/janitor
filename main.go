@@ -19,7 +19,7 @@ func loadEnv() error {
 
 func init() {
 	if err := loadEnv(); err != nil {
-		log.Fatal().Err(err).Msg("Error loading environment variables")
+		log.Print("Error loading environment variables from .env")
 	}
 }
 
