@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func loadEnv() error {
-	log.Print("Loading environment variables")
+func loadEnvFromFile() error {
+	log.Print("Loading environment variables from file")
 	if err := godotenv.Load(".env"); err != nil {
 		return err
 	}
@@ -18,8 +18,11 @@ func loadEnv() error {
 }
 
 func init() {
-	if err := loadEnv(); err != nil {
-		log.Print("Error loading environment variables from .env")
+	if err := loadEnvFromFile(); err != nil {
+		if len(os.Getenv("SECRET_XATA_PG_ENDPOINT")) == 0 {
+			log.Fatal().Err(err).Msg("Error loading environment variables")
+			os.Exit(1)
+		}
 	}
 }
 
